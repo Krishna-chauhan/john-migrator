@@ -11,9 +11,9 @@ setup(
     url="https://github.com/Krishna-chauhan/john-migrator.git",
     packages=find_packages(),
     install_requires=[
-        "sqlalchemy",
-        "psycopg2-binary"
-        "python-dotenv",
+        "sqlalchemy>=2.0.0",
+        "psycopg2-binary>=2.9.0",
+        "python-dotenv>=1.0.0",
     ],
     entry_points={
         "console_scripts": [
