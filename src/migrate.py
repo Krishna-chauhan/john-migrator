@@ -1,6 +1,8 @@
 import os
 import importlib
 import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import inspect
 import datetime
 from dotenv import load_dotenv
@@ -12,14 +14,14 @@ from config import Config
 
 config = Config()
 DATABASE_URL = config.DATABASE_URL
-MIGRATION_FOLDER = config.MIGRATION_TABLE
+MIGRATION_FOLDER = config.MIGRATION_FOLDER
 MIGRATION_TABLE = config.MIGRATION_TABLE
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
 MIGRATION_TEMPLATE = """\
-from src.database.base_migration import BaseMigration
+from src.migrations.base_migration import BaseMigration
 
 class {class_name}(BaseMigration):
     def __init__(self):

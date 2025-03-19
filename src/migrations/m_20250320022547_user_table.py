@@ -1,12 +1,13 @@
-from src.database.base_migration import BaseMigration
+from src.migrations.base_migration import BaseMigration
 
-class CreateUserTable(BaseMigration):
+
+class UserTable(BaseMigration):
     def __init__(self):
-        self.table_name = "create_user_table"
+        self.table_name = "user_table"
 
     def up(self):
         return """
-        CREATE TABLE create_user_table (
+        CREATE TABLE user_table (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255),
             created_at TIMESTAMP DEFAULT NOW(),
@@ -15,4 +16,4 @@ class CreateUserTable(BaseMigration):
         """
 
     def down(self):
-        return f'DROP TABLE IF EXISTS "create_user_table";'
+        return f'DROP TABLE IF EXISTS "user_table";'
