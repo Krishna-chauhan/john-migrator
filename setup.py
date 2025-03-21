@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="john-migrator",  # Change this to a unique name on PyPI
+    name="john-migrator",
     version="1.0.0",
     author="John Doe",
     author_email="krishnachauhan20993@gmail.com",
@@ -9,7 +9,11 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/Krishna-chauhan/john-migrator.git",
-    packages=find_packages(),
+    packages=find_packages(include=["src", "src.*"]),
+    package_dir={"": "."},  # Point to the root folder
+    package_data={
+        "src": ["config.py"],  # Include config.py explicitly
+    },
     install_requires=[
         "sqlalchemy>=2.0.0",
         "psycopg2-binary>=2.9.0",
@@ -17,7 +21,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "db-migrate=src.migrate:main",  # CLI command
+            "john-migrator=src.migrate:main",
         ],
     },
     classifiers=[

@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
-from config import Config
+from src.config import Config
+
 
 
 config = Config()
@@ -175,9 +176,9 @@ def rollback_last_batch():
             run_migration(migration[0], "down")
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) < 2:
-        print("Usage: python migrate.py <up/down>")
+        print("Usage: john-migrator <up/down/create>")
         sys.exit(1)
 
     action = sys.argv[1]
@@ -187,9 +188,13 @@ if __name__ == "__main__":
     elif action == "down":
         rollback_last_batch()
     elif action == "create":
-        command = sys.argv[1]
+        if len(sys.argv) < 3:
+            print("❌ Missing migration name for 'create' command.")
+            sys.exit(1)
         migration_name = sys.argv[2]
         create_migration(migration_name)
     else:
-        print("❌ Invalid command! Use 'up' to apply new migrations , 'down' to rollback. and 'create' to create a new "
-              "migration.")
+        print("❌ Invalid command! Use 'up', 'down', or 'create'.")
+
+if __name__ == "__main__":
+    main()

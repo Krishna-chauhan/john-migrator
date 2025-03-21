@@ -1,0 +1,3 @@
+include src/*.py
+include README.md
+include src/config.py
