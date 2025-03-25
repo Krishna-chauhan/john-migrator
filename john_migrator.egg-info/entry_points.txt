@@ -1,2 +1,0 @@
-[console_scripts]
-john-migrator = src.migrate:main
