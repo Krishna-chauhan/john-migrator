@@ -1,0 +1,39 @@
+Metadata-Version: 2.2
+Name: john-migrator
+Version: 1.0.0
+Summary: A lightweight database migration tool for Python projects
+Home-page: https://github.com/Krishna-chauhan/john-migrator.git
+Author: John Doe
+Author-email: krishnachauhan20993@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: sqlalchemy>=2.0.0
+Requires-Dist: psycopg2-binary>=2.9.0
+Requires-Dist: python-dotenv>=1.0.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# 🚀 DB Migrator
+
+A lightweight database migration tool for managing and automating schema changes.
+
+---
+
+## 📦 Features  
+✅ Apply and rollback migrations automatically  
+✅ Track applied migrations using a `schema_migrations` table  
+✅ Supports PostgreSQL and MySQL  
+✅ Error handling and logging  
+
+---
+
