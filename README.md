@@ -16,6 +16,9 @@ A lightweight database migration tool for managing and automating schema changes
 ## 🛠️ Commands
 
 ```bash
+#install the package
+pip install john-migrator
+
 # Apply all pending migrations
 john-migrator up
 
