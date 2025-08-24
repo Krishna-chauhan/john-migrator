@@ -4,7 +4,7 @@ This file maintains the old interface while using the new class-based structure
 """
 
 import sys
-from migration_manager import MigrationManager
+from .migration_manager import MigrationManager
 
 
 def create_migration(migration_name, columns=None):

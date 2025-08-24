@@ -4,7 +4,7 @@ Handles command line argument parsing and execution
 """
 
 import sys
-from migration_manager import MigrationManager
+from .migration_manager import MigrationManager
 
 
 def show_help():
