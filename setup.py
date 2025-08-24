@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="john-migrator",
-    version="1.0.0",
+    version="1.2.0",
     author="John Doe",
     author_email="krishnachauhan20993@gmail.com",
     description="A lightweight database migration tool for Python projects",
@@ -10,9 +10,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Krishna-chauhan/john-migrator.git",
     packages=find_packages(include=["src", "src.*"]),
-    package_dir={"john_migrator": "src"},  # Map john_migrator package to src directory
+    package_dir={"": "."},  # Point to the root folder
     package_data={
-        "john_migrator": ["migrations/*.py"],  # Include all migration files
+        "src": ["migrations/*.py"],  # Include all migration files
     },
     install_requires=[
         "sqlalchemy>=2.0.0",
@@ -21,7 +21,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "john-migrator=john_migrator.cli:main",  # Use new CLI
+            "john-migrator=src.cli:main",  # Use new CLI
         ],
     },
     classifiers=[
