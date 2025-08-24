@@ -1,200 +1,105 @@
-import os
-import importlib
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-import inspect
-import datetime
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
-from sqlalchemy.orm import sessionmaker
-from src.config import Config
-
-
-
-config = Config()
-DATABASE_URL = config.DATABASE_URL
-MIGRATION_FOLDER = config.MIGRATION_FOLDER
-MIGRATION_TABLE = config.MIGRATION_TABLE
-
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
-
-MIGRATION_TEMPLATE = """\
-from src.migrations.base_migration import BaseMigration
-
-class {class_name}(BaseMigration):
-    def __init__(self):
-        self.table_name = "{table_name}"
-
-    def up(self):
-        return \"\"\"
-        CREATE TABLE {table_name} (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(255),
-            created_at TIMESTAMP DEFAULT NOW(),
-            updated_at TIMESTAMP DEFAULT NOW()
-        );
-        \"\"\"
-
-    def down(self):
-        return f'DROP TABLE IF EXISTS "{table_name}";'
+"""
+Legacy migration interface for backward compatibility
+This file maintains the old interface while using the new class-based structure
 """
 
-
-def create_migration(migration_name):
-    """Generates a new migration file."""
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    filename = f"m_{timestamp}_{migration_name}.py"
-    filepath = os.path.join(MIGRATION_FOLDER, filename)
-
-    class_name = "".join(word.capitalize() for word in migration_name.split("_"))
-
-    if not os.path.exists(MIGRATION_FOLDER):
-        os.makedirs(MIGRATION_FOLDER)
-
-    with open(filepath, "w") as f:
-        f.write(MIGRATION_TEMPLATE.format(class_name=class_name, table_name=migration_name))
-
-    # Explicitly set writable permissions
-    os.chmod(filepath, 0o644)  # rw-r--r--
-    print(f"✅ Migration '{filename}' created successfully at {filepath}.")
+import sys
+from migration_manager import MigrationManager
 
 
-def create_migration_table():
-    """Creates the migrations table if it does not exist."""
-    with SessionLocal() as session:
-        session.execute(text(f"""
-            CREATE TABLE IF NOT EXISTS {MIGRATION_TABLE} (
-                id SERIAL PRIMARY KEY,
-                migration VARCHAR(255) UNIQUE NOT NULL,
-                batch INT NOT NULL,
-                applied_at TIMESTAMP DEFAULT NOW()
-            );
-        """))
-        session.commit()
-    print("✅ Migration table ensured.")
+def create_migration(migration_name, columns=None):
+    """Legacy function for creating migrations."""
+    manager = MigrationManager()
+    manager.create_migration(migration_name, columns)
 
 
-def find_migration_class(module):
-    """Dynamically find and return the first class in the module."""
-    for name, obj in inspect.getmembers(module, inspect.isclass):
-        if obj.__module__ == module.__name__:
-            return obj  # Return the first class found
-    raise ImportError(f"❌ No valid migration class found in '{module.__name__}'")
-
-
-def get_applied_migrations():
-    """Fetch applied migrations from the database."""
-    try:
-        with SessionLocal() as session:
-            result = session.execute(text(f"SELECT migration FROM {MIGRATION_TABLE}"))
-            return {row[0] for row in result}
-    except ProgrammingError:
-        create_migration_table()
-        return get_applied_migrations()
-
-
-def get_all_migrations():
-    """Fetch all migration filenames from the `migrations` folder."""
-    return sorted(
-        [f[:-3] for f in os.listdir(MIGRATION_FOLDER) if f.endswith(".py") and f.startswith("m_")]
-    )
-
-
-def run_migration(migration_name, action):
-    """Run a migration dynamically from the migrations folder."""
-    try:
-        module_path = MIGRATION_FOLDER.replace("/", ".")
-        print(f"🔄 Running migration: {migration_name} ({action})")
-
-        module = importlib.import_module(f'{module_path}.{migration_name}')
-        migration_class = find_migration_class(module)
-        migration = migration_class()
-
-        with SessionLocal() as session:
-            if action == "up":
-                session.execute(text(migration.up()))
-                latest_batch = session.execute(text(f"SELECT MAX(batch) FROM {MIGRATION_TABLE}"))
-                new_batch = (latest_batch.scalar() or 0) + 1
-                session.execute(
-                    text(f"INSERT INTO {MIGRATION_TABLE} (migration, batch) VALUES (:migration_name, :batch)"),
-                    {"migration_name": migration_name, "batch": new_batch})
-                session.commit()
-                print(f"✅ Migration {migration_name} applied.")
-
-            elif action == "down":
-                session.execute(text(migration.down()))
-                session.execute(text(f"DELETE FROM {MIGRATION_TABLE} WHERE migration = :migration_name"),
-                                {"migration_name": migration_name})
-                session.commit()
-                print(f"✅ Migration {migration_name} rolled back.")
-
-            else:
-                print("❌ Invalid action! Use 'up' or 'down'.")
-
-    except ImportError:
-        print(f"❌ Migration '{migration_name}' not found.")
-    except SQLAlchemyError as e:
-        print(f"❌ Database error in '{migration_name}': {e}")
-    except Exception as e:
-        print(f"❌ Unexpected error in '{migration_name}': {e}")
+def create_alter_migration(table_name, operations):
+    """Legacy function for creating ALTER TABLE migrations."""
+    manager = MigrationManager()
+    manager.create_alter_migration(table_name, operations)
 
 
 def run_pending_migrations():
-    """Run all migrations that are not in the database."""
-    applied = get_applied_migrations()
-    all_migrations = get_all_migrations()
-    pending_migrations = [m for m in all_migrations if m not in applied]
-
-    if not pending_migrations:
-        print("✅ No new migrations to apply.")
-        return
-
-    print(f"🚀 Applying {len(pending_migrations)} pending migrations...")
-    for migration in pending_migrations:
-        run_migration(migration, "up")
+    """Legacy function for running pending migrations."""
+    manager = MigrationManager()
+    manager.run_migrations()
 
 
 def rollback_last_batch():
-    """Rollback the last applied migration batch."""
-    with SessionLocal() as session:
-        last_batch = session.execute(text(f"SELECT MAX(batch) FROM {MIGRATION_TABLE}"))
-        last_batch = last_batch.scalar()
-
-        if last_batch is None:
-            print("❌ No migrations to rollback.")
-            return
-
-        migrations_to_rollback = session.execute(
-            text(f"SELECT migration FROM {MIGRATION_TABLE} WHERE batch = :batch"),
-            {"batch": last_batch}
-        ).fetchall()
-
-        for migration in migrations_to_rollback:
-            run_migration(migration[0], "down")
+    """Legacy function for rolling back migrations."""
+    manager = MigrationManager()
+    manager.rollback_migrations()
 
 
 def main():
+    """Legacy main function for backward compatibility."""
     if len(sys.argv) < 2:
-        print("Usage: john-migrator <up/down/create>")
+        print("Usage: john-migrator <up/down/create/alter/init>")
+        print("\nCommands:")
+        print("  init    - Create a default configuration file")
+        print("  create  - Create a new migration file")
+        print("  alter   - Create an ALTER TABLE migration")
+        print("  up      - Apply pending migrations")
+        print("  down    - Rollback the latest migration")
+        print("\nExamples:")
+        print("  john-migrator init")
+        print("  john-migrator create users")
+        print("  john-migrator create users name:varchar(255) age:integer email:varchar(100)")
+        print("  john-migrator alter users add age:integer add email:varchar(100)")
+        print("  john-migrator up")
+        print("  john-migrator down")
         sys.exit(1)
 
     action = sys.argv[1]
+    manager = MigrationManager()
 
-    if action == "up":
-        run_pending_migrations()
-    elif action == "down":
-        rollback_last_batch()
-    elif action == "create":
-        if len(sys.argv) < 3:
-            print("❌ Missing migration name for 'create' command.")
-            sys.exit(1)
-        migration_name = sys.argv[2]
-        create_migration(migration_name)
-    else:
-        print("❌ Invalid command! Use 'up', 'down', or 'create'.")
+    try:
+        if action == "up":
+            manager.run_migrations()
+        elif action == "down":
+            manager.rollback_migrations()
+        elif action == "create":
+            if len(sys.argv) < 3:
+                print("❌ Missing migration name for 'create' command.")
+                print("Usage: john-migrator create <migration_name> [column1:type1 column2:type2 ...]")
+                sys.exit(1)
+            
+            migration_name = sys.argv[2]
+            columns = sys.argv[3:] if len(sys.argv) > 3 else None
+            
+            if columns:
+                print(f"📝 Creating migration '{migration_name}' with columns: {', '.join(columns)}")
+            else:
+                print(f"📝 Creating migration '{migration_name}' with default columns")
+            
+            manager.create_migration(migration_name, columns)
+        elif action == "alter":
+            if len(sys.argv) < 4:
+                print("❌ Missing arguments for 'alter' command.")
+                print("Usage: john-migrator alter <table_name> <operation1> [operation2 ...]")
+                print("\nOperations:")
+                print("  add column_name:type     - Add a new column")
+                print("  drop column_name         - Drop an existing column")
+                print("  modify column_name:type  - Modify column type")
+                print("  rename old_name:new_name - Rename a column")
+                sys.exit(1)
+            
+            table_name = sys.argv[2]
+            operations = sys.argv[3:]
+            manager.create_alter_migration(table_name, operations)
+        elif action == "init":
+            manager.init_project()
+        else:
+            print("❌ Invalid command! Use 'init', 'up', 'down', 'create', or 'alter'.")
+            print("Run 'john-migrator' without arguments for usage examples.")
+    
+    except KeyboardInterrupt:
+        print("\n❌ Operation cancelled by user.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

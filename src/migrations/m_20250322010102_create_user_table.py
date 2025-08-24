@@ -1,4 +1,4 @@
-from src.migrations.base_migration import BaseMigration
+from john_migrator.migrations.base_migration import BaseMigration
 
 class CreateUserTable(BaseMigration):
     def __init__(self):
