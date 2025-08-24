@@ -21,7 +21,10 @@ class Config:
         self.DB_HOST = getattr(self, "DB_HOST", os.getenv("DB_HOST", "localhost"))
         self.DB_PORT = getattr(self, "DB_PORT", os.getenv("DB_PORT", "5432"))
         self.DB_NAME = getattr(self, "DB_NAME", os.getenv("DB_NAME", "default_db"))
-        self.MIGRATION_FOLDER = getattr(self, "MIGRATION_FOLDER", os.getenv("MIGRATION_FOLDER", "src/migrations"))
+        
+        # Use current working directory for migrations by default
+        default_migration_folder = os.path.join(os.getcwd(), "migrations")
+        self.MIGRATION_FOLDER = getattr(self, "MIGRATION_FOLDER", os.getenv("MIGRATION_FOLDER", default_migration_folder))
         self.MIGRATION_TABLE = getattr(self, "MIGRATION_TABLE", os.getenv("MIGRATION_TABLE", "migrations"))
 
         self.DATABASE_URL = f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
