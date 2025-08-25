@@ -34,6 +34,9 @@ A lightweight database migration tool for managing and automating schema changes
 - ✅ Robust error handling and detailed logging
 - ✅ Works in any Python project directory
 - ✅ **NEW**: Define table columns when creating migrations
+- ✅ **NEW**: Automatic SQLAlchemy ORM model generation
+- ✅ **NEW**: ORM model synchronization with migrations
+- ✅ **NEW**: Configurable ORM model folder and settings
 
 ---
 
@@ -151,6 +154,7 @@ john-migrator alter products drop old_price rename product_name:name
 | `down` | Rollback the latest migration | `john-migrator down` |
 | `status` | Show migration status | `john-migrator status` |
 | `run` | Run a specific migration | `john-migrator run m_20250101120000_create_users up` |
+| `sync` | Sync ORM models with migrations | `john-migrator sync` |
 
 ### Command Details
 
@@ -213,6 +217,103 @@ john-migrator run m_20250101120000_create_users down
 
 ---
 
+## 🗃️ ORM Model Generation
+
+**NEW**: DB Migrator now automatically generates SQLAlchemy ORM models when you create migrations!
+
+### Automatic ORM Model Generation
+
+When you create a migration, DB Migrator automatically generates a corresponding SQLAlchemy model:
+
+```bash
+# Create a migration with columns
+john-migrator create users username:varchar(255) age:integer email:varchar(100) is_active:boolean
+```
+
+This will create:
+1. **Migration file**: `migrations/m_20250101120000_users.py`
+2. **ORM Model**: `models/users.py`
+
+### Generated ORM Model Example
+
+```python
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, BigInteger, Date, JSON
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
+
+Base = declarative_base()
+
+
+class Users(Base):
+    __tablename__ = 'users'
+    
+    # Primary key
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # Custom columns
+    username = Column(String(255), nullable=True)
+    age = Column(Integer, nullable=True)
+    email = Column(String(100), nullable=True)
+    is_active = Column(Boolean, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    def __repr__(self):
+        return f'<Users(id={self.id})>'
+```
+
+### ORM Configuration
+
+Configure ORM model generation in your `john_migrator_config.py`:
+
+```python
+# ORM Model Configuration (optional)
+MODELS_FOLDER = "models"  # Default: ./models
+GENERATE_ORM_MODELS = True  # Set to False to disable ORM model generation
+ORM_BASE_CLASS = "Base"  # SQLAlchemy base class name
+```
+
+### ORM Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `sync` | Sync all ORM models with migrations | `john-migrator sync` |
+
+#### `john-migrator sync`
+Synchronizes all ORM models with their corresponding migration files. Useful when:
+- You've manually edited migration files
+- You want to regenerate all models
+- You've added new migrations from other sources
+
+```bash
+john-migrator sync
+```
+
+### ORM Model Synchronization
+
+DB Migrator automatically syncs ORM models when:
+- ✅ Creating new migrations with `create` command
+- ✅ Applying migrations with `up` command
+- ✅ Running the `sync` command manually
+
+### Supported SQL to SQLAlchemy Type Mapping
+
+| SQL Type | SQLAlchemy Type | Notes |
+|----------|----------------|-------|
+| `varchar(n)` | `String(n)` | Variable length string |
+| `text` | `Text` | Long text |
+| `integer` | `Integer` | Integer number |
+| `bigint` | `BigInteger` | Large integer |
+| `decimal(p,s)` | `Float(p,s)` | Decimal number |
+| `boolean` | `Boolean` | True/False |
+| `timestamp` | `DateTime` | Date and time |
+| `date` | `Date` | Date only |
+| `json` | `JSON` | JSON data |
+
+---
+
 ## 🏗️ Architecture
 
 The DB Migrator is built with a clean, modular architecture:
@@ -236,6 +337,7 @@ src/
 ├── database_manager.py      # Database operations
 ├── migration_generator.py   # Migration file generation
 ├── migration_runner.py      # Migration execution
+├── orm_generator.py         # ORM model generation
 └── migrations/
     ├── __init__.py
     ├── base_migration.py    # Abstract base class
@@ -353,6 +455,9 @@ your-project/
 ├── migrations/                # Your migration files
 │   ├── m_20250101120000_create_users_table.py
 │   └── m_20250101120001_add_user_profile.py
+├── models/                    # Generated ORM models
+│   ├── users.py
+│   └── products.py
 └── .env                       # Optional: environment variables
 ```
 
@@ -369,6 +474,9 @@ your-project/
 | `DB_NAME` | `DB_NAME` | `default_db` | Database name |
 | `MIGRATION_FOLDER` | `MIGRATION_FOLDER` | `./migrations` | Migration files location |
 | `MIGRATION_TABLE` | `MIGRATION_TABLE` | `migrations` | Migration tracking table |
+| `MODELS_FOLDER` | `MODELS_FOLDER` | `./models` | ORM model files location |
+| `GENERATE_ORM_MODELS` | `GENERATE_ORM_MODELS` | `True` | Enable/disable ORM model generation |
+| `ORM_BASE_CLASS` | `ORM_BASE_CLASS` | `Base` | SQLAlchemy base class name |
 
 ---
 

@@ -10,10 +10,12 @@ import sys
 # Handle imports for both direct execution and package import
 try:
     from .config import Config
+    from .orm_generator import ORMGenerator
 except ImportError:
     # When running as script directly
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     from config import Config
+    from orm_generator import ORMGenerator
 
 
 class MigrationGenerator:
@@ -61,6 +63,7 @@ class {class_name}(BaseMigration):
     def __init__(self):
         self.config = Config()
         self.migration_folder = self.config.MIGRATION_FOLDER
+        self.orm_generator = ORMGenerator(self.config) if self.config.GENERATE_ORM_MODELS else None
     
     def create_migration(self, migration_name, columns=None):
         """Generates a new migration file with optional column definitions.
@@ -92,6 +95,15 @@ class {class_name}(BaseMigration):
         
         if columns:
             print(f"📋 Columns defined: {', '.join(columns)}")
+        
+        # Generate ORM model if enabled
+        if self.orm_generator:
+            try:
+                model_file = self.orm_generator.generate_model(migration_name, columns)
+                model_path = self.orm_generator.save_model(migration_name, model_file)
+                print(f"📝 ORM model generated at {model_path}")
+            except Exception as e:
+                print(f"⚠️  Warning: Could not generate ORM model: {e}")
     
     def create_alter_migration(self, table_name, operations):
         """Generates an ALTER TABLE migration file.

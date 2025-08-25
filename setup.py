@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="john-migrator",
-    version="1.2.0",
+    version="1.3.0",
     author="John Doe",
     author_email="krishnachauhan20993@gmail.com",
     description="A lightweight database migration tool for Python projects",

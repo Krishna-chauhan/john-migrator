@@ -13,11 +13,13 @@ from sqlalchemy.exc import SQLAlchemyError
 try:
     from .config import Config
     from .database_manager import DatabaseManager
+    from .orm_generator import ORMGenerator
 except ImportError:
     # When running as script directly
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     from config import Config
     from database_manager import DatabaseManager
+    from orm_generator import ORMGenerator
 
 
 class MigrationRunner:
@@ -27,6 +29,7 @@ class MigrationRunner:
         self.config = Config()
         self.migration_folder = self.config.MIGRATION_FOLDER
         self.db_manager = DatabaseManager()
+        self.orm_generator = ORMGenerator(self.config) if self.config.GENERATE_ORM_MODELS else None
     
     def run_migration(self, migration_name, action):
         """Run a migration dynamically from the migrations folder.
@@ -78,6 +81,17 @@ class MigrationRunner:
         self.db_manager.record_migration(migration_name, new_batch)
         
         print(f"✅ Migration {migration_name} applied.")
+        
+        # Sync ORM model if enabled
+        if self.orm_generator:
+            try:
+                migration_file = os.path.join(self.migration_folder, f"{migration_name}.py")
+                if os.path.exists(migration_file):
+                    model_path = self.orm_generator.update_model_from_migration(migration_file)
+                    if model_path:
+                        print(f"📝 ORM model updated: {model_path}")
+            except Exception as e:
+                print(f"⚠️  Warning: Could not sync ORM model: {e}")
     
     def _rollback_migration(self, migration_name, migration):
         """Rollback a migration."""

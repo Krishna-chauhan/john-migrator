@@ -26,6 +26,13 @@ class Config:
         default_migration_folder = os.path.join(os.getcwd(), "migrations")
         self.MIGRATION_FOLDER = getattr(self, "MIGRATION_FOLDER", os.getenv("MIGRATION_FOLDER", default_migration_folder))
         self.MIGRATION_TABLE = getattr(self, "MIGRATION_TABLE", os.getenv("MIGRATION_TABLE", "migrations"))
+        
+        # ORM Model Configuration
+        default_models_folder = os.path.join(os.getcwd(), "models")
+        self.MODELS_FOLDER = getattr(self, "MODELS_FOLDER", os.getenv("MODELS_FOLDER", default_models_folder))
+        self.GENERATE_ORM_MODELS = getattr(self, "GENERATE_ORM_MODELS", os.getenv("GENERATE_ORM_MODELS", "True")).lower() == "true"
+        self.ORM_BASE_CLASS = getattr(self, "ORM_BASE_CLASS", os.getenv("ORM_BASE_CLASS", "Base"))
+        self.ORM_IMPORTS = getattr(self, "ORM_IMPORTS", os.getenv("ORM_IMPORTS", "from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, BigInteger, Date, JSON\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom sqlalchemy.sql import func\n\nBase = declarative_base()"))
 
         self.DATABASE_URL = f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
@@ -46,4 +53,6 @@ class Config:
     def __str__(self):
         return (f"Database URL: {self.DATABASE_URL}\n"
                 f"Migration Folder: {self.MIGRATION_FOLDER}\n"
-                f"Migration Table: {self.MIGRATION_TABLE}")
+                f"Migration Table: {self.MIGRATION_TABLE}\n"
+                f"Models Folder: {self.MODELS_FOLDER}\n"
+                f"Generate ORM Models: {self.GENERATE_ORM_MODELS}")

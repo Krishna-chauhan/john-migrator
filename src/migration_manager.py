@@ -12,6 +12,8 @@ try:
     from .database_manager import DatabaseManager
     from .migration_generator import MigrationGenerator
     from .migration_runner import MigrationRunner
+    from .orm_generator import ORMGenerator
+    from .model_to_migration_generator import ModelToMigrationGenerator
 except ImportError:
     # When running as script directly
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -19,6 +21,8 @@ except ImportError:
     from database_manager import DatabaseManager
     from migration_generator import MigrationGenerator
     from migration_runner import MigrationRunner
+    from orm_generator import ORMGenerator
+    from model_to_migration_generator import ModelToMigrationGenerator
 
 
 class MigrationManager:
@@ -29,6 +33,8 @@ class MigrationManager:
         self.db_manager = DatabaseManager()
         self.generator = MigrationGenerator()
         self.runner = MigrationRunner()
+        self.orm_generator = ORMGenerator(self.config) if self.config.GENERATE_ORM_MODELS else None
+        self.model_to_migration_generator = ModelToMigrationGenerator(self.config)
     
     def init_project(self):
         """Initialize the project with a default configuration file."""
@@ -43,6 +49,11 @@ DB_NAME = "your_database"
 # Migration Configuration (optional)
 MIGRATION_FOLDER = "migrations"  # Default: ./migrations
 MIGRATION_TABLE = "migrations"   # Default: migrations
+
+# ORM Model Configuration (optional)
+MODELS_FOLDER = "models"  # Default: ./models
+GENERATE_ORM_MODELS = True  # Set to False to disable ORM model generation
+ORM_BASE_CLASS = "Base"  # SQLAlchemy base class name
 
 # Example for different database types:
 # PostgreSQL (default)
@@ -117,3 +128,20 @@ MIGRATION_TABLE = "migrations"   # Default: migrations
         applied = self.get_applied_migrations()
         all_migrations = self.get_all_migrations()
         return [m for m in all_migrations if m not in applied]
+    
+    def sync_orm_models(self):
+        """Sync all ORM models with their corresponding migrations."""
+        if not self.orm_generator:
+            print("❌ ORM model generation is disabled. Enable GENERATE_ORM_MODELS in config.")
+            return
+        
+        try:
+            updated_models = self.orm_generator.sync_all_models(self.config.MIGRATION_FOLDER)
+            if updated_models:
+                print(f"✅ Synced {len(updated_models)} ORM models:")
+                for model_path in updated_models:
+                    print(f"  📝 {model_path}")
+            else:
+                print("✅ No ORM models to sync.")
+        except Exception as e:
+            print(f"❌ Error syncing ORM models: {e}")

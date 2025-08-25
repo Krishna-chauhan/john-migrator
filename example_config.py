@@ -13,6 +13,11 @@ DB_NAME = "your_database"
 MIGRATION_FOLDER = "migrations"  # Default: ./migrations
 MIGRATION_TABLE = "migrations"   # Default: migrations
 
+# ORM Model Configuration (optional)
+MODELS_FOLDER = "models"  # Default: ./models
+GENERATE_ORM_MODELS = True  # Set to False to disable ORM model generation
+ORM_BASE_CLASS = "Base"  # SQLAlchemy base class name
+
 # Example for different database types:
 # PostgreSQL (default)
 # DATABASE_URL = "postgresql://user:pass@localhost:5432/dbname"

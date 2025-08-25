@@ -18,6 +18,8 @@ def show_help():
     print("  down    - Rollback the latest migration")
     print("  status  - Show migration status")
     print("  run     - Run a specific migration")
+    print("  sync    - Sync ORM models with migrations")
+    print("  from-model - Generate migrations from existing ORM models")
     print("\nExamples:")
     print("  john-migrator init")
     print("  john-migrator create users")
@@ -98,8 +100,30 @@ def main():
             if action not in ["up", "down"]:
                 print("❌ Invalid action! Use 'up' or 'down'.")
                 sys.exit(1)
+        
+        elif command == "sync":
+            print("🔄 Syncing ORM models with migrations...")
+            manager.sync_orm_models()
+        
+        elif command == "from-model":
+            if len(sys.argv) < 3:
+                print("❌ Missing models path for 'from-model' command.")
+                print("Usage: john-migrator from-model <models_path> [model_name1 model_name2 ...]")
+                print("\nExamples:")
+                print("  john-migrator from-model ./models")
+                print("  john-migrator from-model ./models/user.py")
+                print("  john-migrator from-model ./models User Product")
+                sys.exit(1)
             
-            manager.run_specific_migration(migration_name, action)
+            models_path = sys.argv[2]
+            model_names = sys.argv[3:] if len(sys.argv) > 3 else None
+            
+            if model_names:
+                print(f"📝 Generating migrations from {models_path} for models: {', '.join(model_names)}")
+            else:
+                print(f"📝 Generating migrations from all models in {models_path}")
+            
+            manager.generate_migrations_from_models(models_path, model_names)
         
         else:
             print(f"❌ Unknown command: {command}")
