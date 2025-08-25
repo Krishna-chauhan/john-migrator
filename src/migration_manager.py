@@ -5,6 +5,7 @@ Main orchestrator for migration operations
 
 import os
 import sys
+from typing import List
 
 # Handle imports for both direct execution and package import
 try:
@@ -145,3 +146,16 @@ ORM_BASE_CLASS = "Base"  # SQLAlchemy base class name
                 print("✅ No ORM models to sync.")
         except Exception as e:
             print(f"❌ Error syncing ORM models: {e}")
+    
+    def generate_migrations_from_models(self, models_path: str, model_names: List[str] = None):
+        """Generate migrations from existing ORM models."""
+        try:
+            generated_migrations = self.model_to_migration_generator.generate_migration_from_models(models_path, model_names)
+            if generated_migrations:
+                print(f"✅ Generated {len(generated_migrations)} migrations from models:")
+                for migration_path in generated_migrations:
+                    print(f"  📝 {migration_path}")
+            else:
+                print("❌ No migrations were generated.")
+        except Exception as e:
+            print(f"❌ Error generating migrations from models: {e}")

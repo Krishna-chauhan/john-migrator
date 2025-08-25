@@ -77,7 +77,23 @@ def main():
             
             table_name = sys.argv[2]
             operations = sys.argv[3:]
-            manager.create_alter_migration(table_name, operations)
+            
+            # Format operations properly for the migration generator
+            formatted_operations = []
+            i = 0
+            while i < len(operations):
+                if operations[i] in ['add', 'drop', 'modify', 'rename']:
+                    if i + 1 < len(operations):
+                        formatted_operations.append(f"{operations[i]} {operations[i+1]}")
+                        i += 2
+                    else:
+                        print(f"⚠️  Warning: Incomplete operation: {operations[i]}")
+                        i += 1
+                else:
+                    print(f"⚠️  Warning: Unknown operation: {operations[i]}")
+                    i += 1
+            
+            manager.create_alter_migration(table_name, formatted_operations)
         
         elif command == "up":
             manager.run_migrations()

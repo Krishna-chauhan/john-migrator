@@ -30,7 +30,11 @@ class Config:
         # ORM Model Configuration
         default_models_folder = os.path.join(os.getcwd(), "models")
         self.MODELS_FOLDER = getattr(self, "MODELS_FOLDER", os.getenv("MODELS_FOLDER", default_models_folder))
-        self.GENERATE_ORM_MODELS = getattr(self, "GENERATE_ORM_MODELS", os.getenv("GENERATE_ORM_MODELS", "True")).lower() == "true"
+        generate_orm_models = getattr(self, "GENERATE_ORM_MODELS", os.getenv("GENERATE_ORM_MODELS", "True"))
+        if isinstance(generate_orm_models, str):
+            self.GENERATE_ORM_MODELS = generate_orm_models.lower() == "true"
+        else:
+            self.GENERATE_ORM_MODELS = bool(generate_orm_models)
         self.ORM_BASE_CLASS = getattr(self, "ORM_BASE_CLASS", os.getenv("ORM_BASE_CLASS", "Base"))
         self.ORM_IMPORTS = getattr(self, "ORM_IMPORTS", os.getenv("ORM_IMPORTS", "from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, Float, BigInteger, Date, JSON\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom sqlalchemy.sql import func\n\nBase = declarative_base()"))
 
